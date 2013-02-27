@@ -121,8 +121,9 @@ For modules, the plugin will need to be configured in your project's POM as foll
 	</plugin>  
 
 Note that:
-. the moduleRepoUrl parameter is optional, the default value is: http://github.com/vert-x/vertx2-mods
-. the vertxModulesDirectory parameter is optional, the default value is: ${project.build.directory}
+
+* the moduleRepoUrl parameter is optional, the default value is: http://github.com/vert-x/vertx2-mods
+* the vertxModulesDirectory parameter is optional, the default value is: ${project.build.directory}
 	
 If you need to use any of the out-of-the-box mods then you need a local vert.x install and set the vertxHomeDirectory Maven configuration option. 
 
@@ -142,12 +143,12 @@ Configuration Options
 		<instances>1</instances>
 	</configuration>
 
-daemon: Sets plugin execution mode. Not applicable to the "run" goal.
-verticleName: The verticle to be executed.
-moduleName: The module to be executed.
-vertxHomeDirectory: The directory where vertx2 is installed (not required).
-vertxModulesDirectory: The directory where modules are to be installed.
-classpath: Extra entries for the classpath. Notice that maven artifacts will be included automatically in the classpath.
-worker: Indicates thar the verticle to be deployed is a worker verticle.
-configFile: The config file to be used.
-instances: The number of verticle instances.
+* daemon: Sets plugin execution mode. Not applicable to the "run" goal.
+* verticleName: The verticle to be executed.
+* moduleName: The module to be executed.
+* vertxHomeDirectory: The directory where vertx2 is installed (not required).
+* vertxModulesDirectory: The directory where modules are to be installed.
+* classpath: Extra entries for the classpath. Notice that maven artifacts will be included automatically in the classpath.
+* worker: Indicates thar the verticle to be deployed is a worker verticle.
+* configFile: The config file to be used.
+* instances: The number of verticle instances.
