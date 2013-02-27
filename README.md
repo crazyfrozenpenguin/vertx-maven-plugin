@@ -121,8 +121,8 @@ For modules, the plugin will need to be configured in your project's POM as foll
 	</plugin>  
 
 Note that:
-# the moduleRepoUrl parameter is optional, the default value is: http://github.com/vert-x/vertx2-mods
-# the vertxModulesDirectory parameter is optional, the default value is: ${project.build.directory}
+. the moduleRepoUrl parameter is optional, the default value is: http://github.com/vert-x/vertx2-mods
+. the vertxModulesDirectory parameter is optional, the default value is: ${project.build.directory}
 	
 If you need to use any of the out-of-the-box mods then you need a local vert.x install and set the vertxHomeDirectory Maven configuration option. 
 
