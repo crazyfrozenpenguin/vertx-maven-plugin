@@ -5,7 +5,7 @@ Maven Plugin for running verticles in their own vert.x instance.
 
 Install
 -----
-This plugin is now available on Maven Central.
+This version of the plugin is not yet available on Maven Central.
 
 Group ID: org.anacoders.plugins
 
@@ -18,7 +18,7 @@ Versions
 --------
 
 This plugin's versions are aligned with vert.x versions with the minor version number to indicate increments of the plugin.
-e.g. vert.x 1.2.3.FINAL would be 1.2.3.x
+e.g. vert.x 2.0.0.FINAL would be 2.0.0.x
 
 Usage
 -----
