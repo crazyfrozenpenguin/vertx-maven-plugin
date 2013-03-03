@@ -13,10 +13,9 @@ import org.apache.maven.plugin.logging.Log;
 public abstract class VertxServerProfile implements Runnable {
 
 	protected List<String> serverArgs;
-
 	protected URL[] urls;
-
 	protected Log log;
+	protected boolean deployed;
 
 	protected VertxServerProfile(final List<String> serverArgs, final String classpath, final Log log) {
 		this.log = log;
@@ -38,6 +37,10 @@ public abstract class VertxServerProfile implements Runnable {
 
 	public Log getLog() {
 		return this.log;
+	}
+
+	public boolean isDeployed() {
+		return deployed;
 	}
 
 	protected String readConfigFile(final String strFile) {

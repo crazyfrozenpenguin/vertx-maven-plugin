@@ -16,6 +16,8 @@ package org.vertx.maven.plugin.server;
  * limitations under the License.
  */
 
+import static java.lang.Thread.sleep;
+
 import java.net.URLClassLoader;
 import java.util.LinkedList;
 import java.util.List;
@@ -68,35 +70,40 @@ public class VertxServer {
 					runnableProfile.stop();
 				}
 
-				// Wait until the thread exits
 				try {
 					bootstrapThread.join();
 				} catch (final InterruptedException ex) {
-					// Unexpected interruption
-					ex.printStackTrace();
+					log.debug("bootstrap thread interrupted", ex);
 				}
 			}
 		} catch (final Exception e) {
 		}
 	}
 
-	private void executeWithClassLoader(final Runnable runnable, final ClassLoader classLoader)
+	private void executeWithClassLoader(final VertxServerProfile profile, final ClassLoader classLoader)
 			throws MojoExecutionException {
 
-		final IsolatedThreadGroup threadGroup = new IsolatedThreadGroup(runnable.getClass().getName());
+		final IsolatedThreadGroup threadGroup = new IsolatedThreadGroup(profile.getClass().getName());
 
-		bootstrapThread = new Thread(threadGroup, runnable, runnable.getClass().getName() + ".run()");
+		bootstrapThread = new Thread(threadGroup, profile, profile.getClass().getName() + ".run()");
 		bootstrapThread.setContextClassLoader(classLoader);
 		bootstrapThread.start();
+
+		// wait for deployment to complete
+		while (!profile.isDeployed()) {
+			try {
+				sleep(1000);
+			} catch (final InterruptedException e) {
+				// empty
+			}
+		}
 
 		if (!daemon) {
 			try {
 				bootstrapThread.join();
 			} catch (final InterruptedException e) {
-				Thread.currentThread().interrupt(); // good practice if don't
-													// throw
-				log.debug("Vert.x: interrupted while joining against thread " + bootstrapThread, e); // not
-																										// expected!
+				Thread.currentThread().interrupt();
+				log.debug("Vert.x: interrupted while joining against thread " + bootstrapThread, e);
 			}
 
 			synchronized (threadGroup) {

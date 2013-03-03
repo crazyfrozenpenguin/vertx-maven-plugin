@@ -1,6 +1,7 @@
 package org.vertx.maven.plugin.server.profile;
 
 import static java.lang.Thread.currentThread;
+import static java.lang.Thread.interrupted;
 import static java.lang.Thread.sleep;
 
 import java.lang.reflect.InvocationTargetException;
@@ -23,7 +24,7 @@ public class VertxServerLauncher extends VertxServerProfile {
 	@Override
 	public void run() {
 
-		while (!Thread.interrupted()) {
+		while (!interrupted()) {
 
 			try {
 				if (deployerObj == null) {
@@ -32,12 +33,17 @@ public class VertxServerLauncher extends VertxServerProfile {
 
 					undeployAll = deployer.getMethod("undeployAll");
 					stopPM = deployer.getMethod("stop");
+					final Method isDeployed = deployer.getMethod("isDeployed");
 
 					deployerObj = deployer.newInstance();
 					final Method deploy = deployer.getMethod("deploy", new Class[] { List.class, URL[].class });
 					deploy.invoke(deployerObj, new Object[] { serverArgs, urls });
-				}
 
+					while (!deployed) {
+						deployed = (Boolean) isDeployed.invoke(deployerObj);
+						sleep(1000);
+					}
+				}
 				sleep(1000);
 			} catch (final InterruptedException e) {
 				log.debug("Vert.x: Thread interrupted");

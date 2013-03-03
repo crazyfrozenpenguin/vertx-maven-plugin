@@ -1,6 +1,5 @@
 package org.vertx.maven.plugin.server.profile;
 
-import static java.lang.Thread.currentThread;
 import static java.nio.file.Files.readAllBytes;
 
 import java.io.File;
@@ -17,6 +16,7 @@ import org.vertx.java.platform.PlatformManager;
 public class VertxDeployer {
 
 	private PlatformManager pm;
+	private boolean deployed = false;
 
 	public void deploy(final List<String> serverArgs, final URL[] urls) throws Exception {
 
@@ -40,22 +40,17 @@ public class VertxDeployer {
 			instances = Integer.valueOf(instancesStr);
 		}
 
-		final CompletionHandler handler = new CompletionHandler(currentThread());
-		try {
-			if (serverArgs.get(0).equals("run")) {
-				if (serverArgs.contains("-worker")) {
-					pm.deployWorkerVerticle(false, serverArgs.get(1), config, urls, instances, null, handler);
-				} else {
-					pm.deployVerticle(serverArgs.get(1), config, urls, instances, null, handler);
-				}
-			} else if (serverArgs.get(1).endsWith(".jar") || serverArgs.get(1).endsWith(".zip")) {
-				pm.deployModuleFromZip(serverArgs.get(1), config, instances, handler);
+		final CompletionHandler handler = new CompletionHandler();
+		if (serverArgs.get(0).equals("run")) {
+			if (serverArgs.contains("-worker")) {
+				pm.deployWorkerVerticle(false, serverArgs.get(1), config, urls, instances, null, handler);
 			} else {
-				pm.deployModule(serverArgs.get(1), config, instances, handler);
+				pm.deployVerticle(serverArgs.get(1), config, urls, instances, null, handler);
 			}
-			currentThread().join();
-		} catch (final InterruptedException e) {
-			// empty
+		} else if (serverArgs.get(1).endsWith(".jar") || serverArgs.get(1).endsWith(".zip")) {
+			pm.deployModuleFromZip(serverArgs.get(1), config, instances, handler);
+		} else {
+			pm.deployModule(serverArgs.get(1), config, instances, handler);
 		}
 	}
 
@@ -65,6 +60,10 @@ public class VertxDeployer {
 
 	public void stop() {
 		pm.stop();
+	}
+
+	public boolean isDeployed() {
+		return deployed;
 	}
 
 	private String readConfigFile(final String strFile) throws Exception {
@@ -81,16 +80,10 @@ public class VertxDeployer {
 	}
 
 	private class CompletionHandler implements Handler<String> {
-
-		private Thread t = null;
-
-		public CompletionHandler(final Thread t) {
-			this.t = t;
-		}
-
 		@Override
 		public void handle(final String event) {
-			t.interrupt();
+			System.err.println("Vert.x has finished deploying.");
+			deployed = true;
 		}
 
 	}
