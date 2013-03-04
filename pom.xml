@@ -130,12 +130,12 @@
 
 		<!-- vertx dependencies -->
 		<dependency>
-			<groupId>org.vertx</groupId>
+			<groupId>io.vertx</groupId>
 			<artifactId>vertx-platform</artifactId>
 			<version>${vertx.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.vertx</groupId>
+			<groupId>io.vertx</groupId>
 			<artifactId>vertx-core</artifactId>
 			<version>${vertx.version}</version>
 		</dependency>
