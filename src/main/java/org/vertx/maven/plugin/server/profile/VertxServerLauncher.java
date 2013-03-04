@@ -50,10 +50,10 @@ public class VertxServerLauncher extends VertxServerProfile {
 				break;
 			} catch (final ClassNotFoundException | IllegalAccessException | SecurityException | NoSuchMethodException
 					| IllegalArgumentException | InvocationTargetException | InstantiationException e) {
-				log.debug("Vert.x: Failed to initialize", e);
+				log.error("Vert.x: Failed to initialize", e);
 				break;
 			} catch (final Exception e) {
-				log.debug("Vert.x: An unexpected error has occured", e);
+				log.error("Vert.x: An unexpected error has occured", e);
 				break;
 			}
 		}

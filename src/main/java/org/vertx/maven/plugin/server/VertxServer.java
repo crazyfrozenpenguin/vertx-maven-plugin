@@ -90,7 +90,7 @@ public class VertxServer {
 		bootstrapThread.start();
 
 		// wait for deployment to complete
-		while (!profile.isDeployed()) {
+		while (bootstrapThread.isAlive() && !profile.isDeployed()) {
 			try {
 				sleep(1000);
 			} catch (final InterruptedException e) {

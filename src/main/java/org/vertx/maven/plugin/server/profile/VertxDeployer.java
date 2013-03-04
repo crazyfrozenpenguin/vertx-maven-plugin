@@ -16,7 +16,7 @@ import org.vertx.java.platform.PlatformManager;
 public class VertxDeployer {
 
 	private PlatformManager pm;
-	private boolean deployed = false;
+	private Boolean deployed = false;
 
 	public void deploy(final List<String> serverArgs, final URL[] urls) throws Exception {
 
@@ -62,7 +62,10 @@ public class VertxDeployer {
 		pm.stop();
 	}
 
-	public boolean isDeployed() {
+	public boolean isDeployed() throws Exception {
+		if (deployed == null) {
+			throw new Exception("Vert.x has failed to deploy module");
+		}
 		return deployed;
 	}
 
@@ -82,8 +85,12 @@ public class VertxDeployer {
 	private class CompletionHandler implements Handler<String> {
 		@Override
 		public void handle(final String event) {
-			System.err.println("Vert.x has finished deploying.");
-			deployed = true;
+			if (event == null) {
+				deployed = null;
+			} else {
+				System.err.println("Vert.x has finished deploying");
+				deployed = true;
+			}
 		}
 
 	}
