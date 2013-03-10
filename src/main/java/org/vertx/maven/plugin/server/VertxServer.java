@@ -19,56 +19,50 @@ package org.vertx.maven.plugin.server;
 import static java.lang.Thread.sleep;
 
 import java.net.URLClassLoader;
-import java.util.LinkedList;
-import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
-import org.vertx.maven.plugin.server.profile.VertxServerProfile;
+import org.vertx.maven.plugin.server.profile.VertxServerLauncher;
 
-public class VertxServer {
+public enum VertxServer {
+	VertxServer;
 
 	private static final String VERTX_RUN_COMMAND = "run";
-
 	private static final String VERTX_RUNMOD_COMMAND = "runmod";
 
-	private static Thread bootstrapThread;
-
-	private static final List<VertxServerProfile> runnables = new LinkedList<VertxServerProfile>();
+	private Thread bootstrapThread;
+	private VertxServerLauncher runnable;
+	private Log log;
 
 	private boolean daemon = false;
+	private ClassLoader classLoader;
 
-	private final VertxServerProfile runnable;
-
-	private static Log log;
-
-	public VertxServer(final VertxServerProfile runnable) {
-		this.runnable = runnable;
-		log = runnable.getLog();
-		runnables.add(this.runnable);
-	}
-
-	private void run(final boolean daemon) {
-		this.daemon = daemon;
-
-		try {
-			final ClassLoader classLoader = new URLClassLoader(runnable.getUrls());
-			executeWithClassLoader(runnable, classLoader);
-		} catch (final Exception e) {
-			log.debug("Vert.x: Unexpected classload URL", e);
+	public void init(final VertxServerLauncher runnable) {
+		if (VertxServer.runnable == null) {
+			VertxServer.runnable = runnable;
+			VertxServer.runnable.getServerArgs().add(0, VERTX_RUNMOD_COMMAND);
+			log = runnable.getLog();
+			initClassLoader();
 		}
-
 	}
 
-	public static void shutdown() {
+	public void runModule(final boolean daemon) {
+		runnable.deploy();
+		this.run(daemon);
+	}
+
+	public void pullInDependencies() {
+		runnable.pullInDependencies();
+		this.run(true);
+	}
+
+	public void shutdown() {
 		try {
 			if (bootstrapThread != null && bootstrapThread.isAlive()) {
 				log.info("Vert.x: shutdown requested");
 				bootstrapThread.interrupt();
 
-				for (final VertxServerProfile runnableProfile : runnables) {
-					runnableProfile.stop();
-				}
+				runnable.stop();
 
 				try {
 					bootstrapThread.join();
@@ -77,10 +71,22 @@ public class VertxServer {
 				}
 			}
 		} catch (final Exception e) {
+			// empty
 		}
 	}
 
-	private void executeWithClassLoader(final VertxServerProfile profile, final ClassLoader classLoader)
+	private void run(final boolean daemon) {
+		this.daemon = daemon;
+
+		try {
+			executeWithClassLoader(runnable, classLoader);
+		} catch (final Exception e) {
+			log.debug("Vert.x: Unexpected classload URL", e);
+		}
+
+	}
+
+	private void executeWithClassLoader(final VertxServerLauncher profile, final ClassLoader classLoader)
 			throws MojoExecutionException {
 
 		final IsolatedThreadGroup threadGroup = new IsolatedThreadGroup(profile.getClass().getName());
@@ -115,14 +121,10 @@ public class VertxServer {
 		}
 	}
 
-	public void runVerticle(final boolean daemon) {
-		runnable.getServerArgs().add(0, VERTX_RUN_COMMAND);
-		this.run(daemon);
-	}
-
-	public void runModule(final boolean daemon) {
-		runnable.getServerArgs().add(0, VERTX_RUNMOD_COMMAND);
-		this.run(daemon);
+	private void initClassLoader() {
+		if (classLoader == null) {
+			classLoader = new URLClassLoader(runnable.getUrls());
+		}
 	}
 
 	public class IsolatedThreadGroup extends ThreadGroup {

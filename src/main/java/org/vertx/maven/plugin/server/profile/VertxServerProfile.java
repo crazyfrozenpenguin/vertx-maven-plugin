@@ -17,10 +17,10 @@ public abstract class VertxServerProfile implements Runnable {
 	protected Log log;
 	protected boolean deployed;
 
-	protected VertxServerProfile(final List<String> serverArgs, final String classpath, final Log log) {
+	protected VertxServerProfile(final List<String> serverArgs, final Log log) {
 		this.log = log;
 		this.serverArgs = serverArgs;
-		classpathToURLs(classpath);
+		classpathToURLs();
 	}
 
 	public void stop() {
@@ -57,17 +57,20 @@ public abstract class VertxServerProfile implements Runnable {
 		return new String(bytes);
 	}
 
-	private void classpathToURLs(final String classpath) {
-		final String[] paths = classpath.split(":");
-		urls = new URL[paths.length + 1];
-		for (int i = 0; i < paths.length; i++) {
-			try {
-				urls[i] = new URL("file:///" + paths[i]);
-			} catch (final MalformedURLException e) {
-				e.printStackTrace();
+	private void classpathToURLs() {
+		if (serverArgs.contains("-cp")) {
+			final String classpath = serverArgs.get(serverArgs.indexOf("-cp") + 1);
+			final String[] paths = classpath.split(":");
+			urls = new URL[paths.length + 1];
+			for (int i = 0; i < paths.length; i++) {
+				try {
+					urls[i] = new URL("file:///" + paths[i]);
+				} catch (final MalformedURLException e) {
+					e.printStackTrace();
+				}
 			}
+			urls[paths.length] = getPluginLocation();
 		}
-		urls[paths.length] = getPluginLocation();
 	}
 
 	private URL getPluginLocation() {

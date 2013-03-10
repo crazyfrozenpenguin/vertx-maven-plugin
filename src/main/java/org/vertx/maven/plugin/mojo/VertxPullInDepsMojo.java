@@ -1,5 +1,12 @@
 package org.vertx.maven.plugin.mojo;
 
+import static org.apache.maven.plugins.annotations.ResolutionScope.COMPILE_PLUS_RUNTIME;
+import static org.vertx.maven.plugin.server.VertxServer.VertxServer;
+
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.vertx.maven.plugin.server.profile.VertxServerLauncher;
+
 /*
  * Copyright 2001-2005 The Apache Software Foundation.
  *
@@ -16,15 +23,6 @@ package org.vertx.maven.plugin.mojo;
  * limitations under the License.
  */
 
-import static org.apache.maven.plugins.annotations.ResolutionScope.COMPILE_PLUS_RUNTIME;
-import static org.vertx.maven.plugin.server.VertxServer.VertxServer;
-
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.project.MavenProject;
-
 /**
  * <p>
  * This goal is used to run a vert.x verticle in it's own instance.
@@ -38,23 +36,14 @@ import org.apache.maven.project.MavenProject;
  * done before invoking vert.x.
  * </p>
  * 
- * @description Stops vert.x directly from a Maven project at
- *              post-integration-test phase.
+ * @description Pulls in dependencies for given module.
  */
-@Mojo(name = "stop", requiresProject = true, threadSafe = true, requiresDependencyResolution = COMPILE_PLUS_RUNTIME)
-public class VertxStopMojo extends AbstractMojo {
-
-	/**
-	 * The Maven project.
-	 * 
-	 * @parameter property="${project}"
-	 * @required
-	 */
-	@Component
-	protected MavenProject mavenProject;
+@Mojo(name = "pullInDeps", requiresProject = true, threadSafe = true, requiresDependencyResolution = COMPILE_PLUS_RUNTIME)
+public class VertxPullInDepsMojo extends BaseVertxMojo {
 
 	@Override
 	public void execute() throws MojoExecutionException {
-		VertxServer.shutdown();
+		VertxServer.init(new VertxServerLauncher(getArgs(), getLog()));
+		VertxServer.pullInDependencies();
 	}
 }

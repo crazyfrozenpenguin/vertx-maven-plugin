@@ -15,13 +15,14 @@ import org.vertx.java.platform.PlatformManager;
 
 public class VertxDeployer {
 
-	private PlatformManager pm;
+	private final PlatformManager pm;
 	private Boolean deployed = false;
 
-	public void deploy(final List<String> serverArgs, final URL[] urls) throws Exception {
-
+	public VertxDeployer() {
 		pm = PlatformLocator.factory.createPlatformManager();
+	}
 
+	public void deploy(final List<String> serverArgs, final URL[] urls) throws Exception {
 		JsonObject config = null;
 
 		if (serverArgs.contains("-conf")) {
@@ -41,17 +42,15 @@ public class VertxDeployer {
 		}
 
 		final CompletionHandler handler = new CompletionHandler();
-		if (serverArgs.get(0).equals("run")) {
-			if (serverArgs.contains("-worker")) {
-				pm.deployWorkerVerticle(false, serverArgs.get(1), config, urls, instances, null, handler);
-			} else {
-				pm.deployVerticle(serverArgs.get(1), config, urls, instances, null, handler);
-			}
-		} else if (serverArgs.get(1).endsWith(".jar") || serverArgs.get(1).endsWith(".zip")) {
+		if (serverArgs.get(1).endsWith(".jar") || serverArgs.get(1).endsWith(".zip")) {
 			pm.deployModuleFromZip(serverArgs.get(1), config, instances, handler);
 		} else {
 			pm.deployModule(serverArgs.get(1), config, instances, handler);
 		}
+	}
+
+	public void pullInDependencies(final String moduleName) {
+		pm.pullInDependencies(moduleName);
 	}
 
 	public void undeployAll() {
