@@ -36,7 +36,7 @@ import org.apache.maven.plugins.annotations.Mojo;
  * 
  * @description Runs vert.x directly from a Maven project.
  */
-@Mojo(name = "run", requiresProject = true, threadSafe = true, requiresDependencyResolution = COMPILE_PLUS_RUNTIME)
+@Mojo(name = "runMod", requiresProject = true, threadSafe = true, requiresDependencyResolution = COMPILE_PLUS_RUNTIME)
 public class VertxRunMojo extends VertxStartMojo {
 
 	@Override
