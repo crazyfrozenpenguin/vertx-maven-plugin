@@ -31,6 +31,14 @@ To start it, type:
 	mvn vertx:run
 
 
+### vertx:pullInDeps
+
+Pulls in all module dependencies. Can be hooked to a maven phase in the pom file or called directly from the command line.
+To start it, type:
+
+	mvn vertx:pullInDeps
+
+
 ### vertx:start
 This goal will start a verticle or vert.x module in it's own vert.x instance. By default this goal will be executed in daemon mode, meaning that it will not block the maven phase execution.
 This goal is to be hooked to a maven phase.
@@ -47,13 +55,20 @@ To start it, type:
 	mvn vertx:start vertx:stop
 
 ### Hooking to Maven Phase
-Add the following plugin configuration to the pom.xml file:
+Add the following example plugin configuration to the pom.xml file:
 
 	<plugin>
 		<groupId>org.anacoders.plugins</groupId>
 		<artifactId>vertx-maven-plugin</artifactId>
 		<version>2.0.0.0-SNAPSHOT</version>
 		<executions>
+			<execution>
+				<id>pull-in-dependencies</id>
+				<phase>process-test-resources</phase>
+				<goals>
+					<goal>pullInDeps</goal>
+				</goals>
+			</execution>
 			<execution>
 				<id>start-vertx</id>
 				<phase>pre-integration-test</phase>
