@@ -126,6 +126,24 @@ public abstract class BaseVertxMojo extends AbstractMojo {
 
 	/**
 	 * <p>
+	 * The host on which to run the cluster. If not specified cluster mode will
+	 * not be initiated.
+	 * </p>
+	 */
+	@Parameter(property = "run.clusterHost")
+	protected String clusterHost;
+
+	/**
+	 * <p>
+	 * The cluster port number to be used. If not defined, the vert.x default
+	 * port number of 25500 will be used.
+	 * </p>
+	 */
+	@Parameter(property = "run.clusterPort")
+	protected final Integer clusterPort = 25500;
+
+	/**
+	 * <p>
 	 * The home directory of your project modules i.e. target/mods
 	 * </p>
 	 * <p>
@@ -166,6 +184,13 @@ public abstract class BaseVertxMojo extends AbstractMojo {
 		if (configFile != null) {
 			args.add("-conf");
 			args.add(configFile.getAbsolutePath());
+		}
+
+		if (clusterHost != null) {
+			args.add("-cluster-host");
+			args.add(clusterHost);
+			args.add("-cluster-port");
+			args.add(clusterPort.toString());
 		}
 
 		args.add("-instances");

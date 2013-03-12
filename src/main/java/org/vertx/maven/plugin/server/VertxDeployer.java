@@ -15,19 +15,29 @@ import org.vertx.java.platform.PlatformManager;
 
 public class VertxDeployer {
 
-	private final PlatformManager pm;
+	private PlatformManager pm;
 	private Boolean deployed = false;
+	private final List<String> args;
+	private final URL[] urls;
 
-	public VertxDeployer() {
-		pm = PlatformLocator.factory.createPlatformManager();
+	public VertxDeployer(final List<String> args, final URL[] urls) {
+		this.args = args;
+		this.urls = urls;
+		if (args.contains("-cluster-host")) {
+			pm = PlatformLocator.factory.createPlatformManager(
+					Integer.valueOf(args.get(args.indexOf("-cluster-port") + 1)),
+					args.get(args.indexOf("-cluster-host") + 1));
+		} else {
+			pm = PlatformLocator.factory.createPlatformManager();
+		}
 	}
 
-	public void deploy(final List<String> serverArgs, final URL[] urls) throws Exception {
+	public void deploy() throws Exception {
 		JsonObject config = null;
 		deployed = false;
 
-		if (serverArgs.contains("-conf")) {
-			final String conf = serverArgs.get(serverArgs.indexOf("-conf") + 1);
+		if (args.contains("-conf")) {
+			final String conf = args.get(args.indexOf("-conf") + 1);
 
 			final String confContent = readConfigFile(conf);
 
@@ -37,16 +47,16 @@ public class VertxDeployer {
 		}
 
 		int instances = 1;
-		if (serverArgs.contains("-instances")) {
-			final String instancesStr = serverArgs.get(serverArgs.indexOf("-instances") + 1);
+		if (args.contains("-instances")) {
+			final String instancesStr = args.get(args.indexOf("-instances") + 1);
 			instances = Integer.valueOf(instancesStr);
 		}
 
 		final CompletionHandler handler = new CompletionHandler();
-		if (serverArgs.get(1).endsWith(".jar") || serverArgs.get(1).endsWith(".zip")) {
-			pm.deployModuleFromZip(serverArgs.get(1), config, instances, handler);
+		if (args.get(1).endsWith(".jar") || args.get(1).endsWith(".zip")) {
+			pm.deployModuleFromZip(args.get(1), config, instances, handler);
 		} else {
-			pm.deployModule(serverArgs.get(1), config, instances, handler);
+			pm.deployModule(args.get(1), config, instances, handler);
 		}
 	}
 
@@ -95,5 +105,4 @@ public class VertxDeployer {
 		}
 
 	}
-
 }

@@ -42,8 +42,8 @@ public class VertxServerLauncher implements Runnable {
 				case "runMod":
 					command = "nop";
 					initDeployer();
-					deploy = deployer.getMethod("deploy", new Class[] { List.class, URL[].class });
-					deploy.invoke(deployerObj, new Object[] { args, urls });
+					deploy = deployer.getMethod("deploy");
+					deploy.invoke(deployerObj);
 					break;
 				case "pullInDeps":
 					command = "nop";
@@ -108,8 +108,7 @@ public class VertxServerLauncher implements Runnable {
 		return log;
 	}
 
-	private void initDeployer() throws ClassNotFoundException, NoSuchMethodException, InstantiationException,
-			IllegalAccessException {
+	private void initDeployer() throws Exception {
 
 		if (deployerObj == null) {
 			deployer = currentThread().getContextClassLoader().loadClass("org.vertx.maven.plugin.server.VertxDeployer");
@@ -117,7 +116,8 @@ public class VertxServerLauncher implements Runnable {
 			undeployAll = deployer.getMethod("undeployAll");
 			stopPM = deployer.getMethod("stop");
 			isDeployed = deployer.getMethod("isDeployed");
-			deployerObj = deployer.newInstance();
+			deployerObj = deployer.getConstructor(new Class[] { List.class, URL[].class }).newInstance(
+					new Object[] { args, urls });
 		}
 	}
 }
