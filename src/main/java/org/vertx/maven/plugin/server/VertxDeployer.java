@@ -1,4 +1,4 @@
-package org.vertx.maven.plugin.server.profile;
+package org.vertx.maven.plugin.server;
 
 import static java.nio.file.Files.readAllBytes;
 
@@ -24,6 +24,7 @@ public class VertxDeployer {
 
 	public void deploy(final List<String> serverArgs, final URL[] urls) throws Exception {
 		JsonObject config = null;
+		deployed = false;
 
 		if (serverArgs.contains("-conf")) {
 			final String conf = serverArgs.get(serverArgs.indexOf("-conf") + 1);
@@ -51,6 +52,7 @@ public class VertxDeployer {
 
 	public void pullInDependencies(final String moduleName) {
 		pm.pullInDependencies(moduleName);
+		deployed = true;
 	}
 
 	public void undeployAll() {

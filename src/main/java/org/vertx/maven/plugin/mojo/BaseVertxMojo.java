@@ -17,6 +17,9 @@ package org.vertx.maven.plugin.mojo;
  */
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -147,6 +150,7 @@ public abstract class BaseVertxMojo extends AbstractMojo {
 		}
 
 		final List<String> args = new ArrayList<>();
+		args.add("runMod");
 
 		if (moduleName != null) {
 			getLog().info("Launching module [" + moduleName + "]");
@@ -215,4 +219,28 @@ public abstract class BaseVertxMojo extends AbstractMojo {
 		getLog().debug("Default classpath [" + defaultClasspath + "]");
 		return defaultClasspath;
 	}
+
+	protected URL[] classpathToURLs(final List<String> args) {
+		if (args.contains("-cp")) {
+			final String classpath = args.get(args.indexOf("-cp") + 1);
+			final String[] paths = classpath.split(":");
+			final URL[] urls = new URL[paths.length + 1];
+			for (int i = 0; i < paths.length; i++) {
+				try {
+					urls[i] = new URL("file:///" + paths[i]);
+				} catch (final MalformedURLException e) {
+					e.printStackTrace();
+				}
+			}
+			urls[paths.length] = getPluginLocation();
+			return urls;
+		}
+		return null;
+	}
+
+	private URL getPluginLocation() {
+		final ProtectionDomain pd = BaseVertxMojo.class.getProtectionDomain();
+		return pd.getCodeSource().getLocation();
+	}
+
 }

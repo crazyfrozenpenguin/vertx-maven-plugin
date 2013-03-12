@@ -19,9 +19,12 @@ package org.vertx.maven.plugin.mojo;
 import static org.apache.maven.plugins.annotations.ResolutionScope.COMPILE_PLUS_RUNTIME;
 import static org.vertx.maven.plugin.server.VertxServer.VertxServer;
 
+import java.net.URL;
+import java.util.List;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.vertx.maven.plugin.server.profile.VertxServerLauncher;
+import org.vertx.maven.plugin.server.VertxServerLauncher;
 
 /**
  * <p>
@@ -43,7 +46,9 @@ public class VertxStartMojo extends BaseVertxMojo {
 
 	@Override
 	public void execute() throws MojoExecutionException {
-		VertxServer.init(new VertxServerLauncher(getArgs(), getLog()));
+		final List<String> args = getArgs();
+		final URL[] urls = classpathToURLs(args);
+		VertxServer.init(new VertxServerLauncher(args, urls, getLog()));
 		VertxServer.runModule(daemon);
 	}
 

@@ -22,13 +22,9 @@ import java.net.URLClassLoader;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
-import org.vertx.maven.plugin.server.profile.VertxServerLauncher;
 
 public enum VertxServer {
 	VertxServer;
-
-	private static final String VERTX_RUN_COMMAND = "run";
-	private static final String VERTX_RUNMOD_COMMAND = "runmod";
 
 	private Thread bootstrapThread;
 	private VertxServerLauncher runnable;
@@ -40,9 +36,8 @@ public enum VertxServer {
 	public void init(final VertxServerLauncher runnable) {
 		if (VertxServer.runnable == null) {
 			VertxServer.runnable = runnable;
-			VertxServer.runnable.getServerArgs().add(0, VERTX_RUNMOD_COMMAND);
 			log = runnable.getLog();
-			initClassLoader();
+			classLoader = new URLClassLoader(runnable.getUrls());
 		}
 	}
 
@@ -96,7 +91,7 @@ public enum VertxServer {
 		bootstrapThread.start();
 
 		// wait for deployment to complete
-		while (bootstrapThread.isAlive() && !profile.isDeployed()) {
+		while (bootstrapThread.isAlive() && !runnable.isDeployed()) {
 			try {
 				sleep(1000);
 			} catch (final InterruptedException e) {
@@ -118,12 +113,6 @@ public enum VertxServer {
 							+ threadGroup.uncaughtException.getMessage(), threadGroup.uncaughtException);
 				}
 			}
-		}
-	}
-
-	private void initClassLoader() {
-		if (classLoader == null) {
-			classLoader = new URLClassLoader(runnable.getUrls());
 		}
 	}
 

@@ -1,4 +1,4 @@
-package org.vertx.maven.plugin.server.profile;
+package org.vertx.maven.plugin.server;
 
 import static java.lang.Thread.currentThread;
 import static java.lang.Thread.interrupted;
@@ -11,50 +11,50 @@ import java.util.List;
 
 import org.apache.maven.plugin.logging.Log;
 
-public class VertxServerLauncher extends VertxServerProfile {
+public class VertxServerLauncher implements Runnable {
 
+	private final List<String> args;
+	private final URL[] urls;
+	private final Log log;
 	private Class<?> deployer;
 	private Object deployerObj;
+	private Method isDeployed;
 	private Method undeployAll;
 	private Method stopPM;
 	private Method deploy;
 
-	private boolean doDeploy = false;
-	private boolean doPullInDeps = false;
+	private String command = "nop";
 
-	public VertxServerLauncher(final List<String> serverArgs, final Log log) {
-		super(serverArgs, log);
+	public VertxServerLauncher(final List<String> args, final URL[] urls, final Log log) {
+		this.args = args;
+		this.urls = urls;
+		this.log = log;
 	}
 
 	@Override
 	public void run() {
 
 		while (!interrupted()) {
+
 			try {
-				if (deployerObj == null) {
+
+				switch (command) {
+				case "runMod":
+					command = "nop";
 					initDeployer();
-
-					if (doDeploy == true) {
-						doDeploy = false;
-						final Method isDeployed = deployer.getMethod("isDeployed");
-						deploy = deployer.getMethod("deploy", new Class[] { List.class, URL[].class });
-						deploy.invoke(deployerObj, new Object[] { serverArgs, urls });
-
-						while (!deployed) {
-							deployed = (Boolean) isDeployed.invoke(deployerObj);
-							sleep(1000);
-						}
-
-					} else if (doPullInDeps == true) {
-						doPullInDeps = false;
-						final Method pullInDependencies = deployer.getMethod("pullInDependencies",
-								new Class[] { String.class });
-						pullInDependencies.invoke(deployerObj, new Object[] { serverArgs.get(1) });
-						deployed = true;
-					}
-
+					deploy = deployer.getMethod("deploy", new Class[] { List.class, URL[].class });
+					deploy.invoke(deployerObj, new Object[] { args, urls });
+					break;
+				case "pullInDeps":
+					command = "nop";
+					initDeployer();
+					final Method pullInDependencies = deployer.getMethod("pullInDependencies",
+							new Class[] { String.class });
+					pullInDependencies.invoke(deployerObj, new Object[] { args.get(1) });
+					break;
+				default:
+					sleep(1000);
 				}
-				sleep(1000);
 			} catch (final InterruptedException e) {
 				log.debug("Vert.x: Thread interrupted");
 				break;
@@ -67,21 +67,26 @@ public class VertxServerLauncher extends VertxServerProfile {
 				break;
 			}
 		}
-
 		log.info("Vert.x: shutdown initiated");
 	}
 
 	public void deploy() {
-		deployed = false;
-		doDeploy = true;
+		command = "runMod";
 	}
 
 	public void pullInDependencies() {
-		deployed = false;
-		doPullInDeps = true;
+		command = "pullInDeps";
 	}
 
-	@Override
+	public boolean isDeployed() {
+		try {
+			return deployerObj == null ? false : (Boolean) isDeployed.invoke(deployerObj);
+		} catch (final Exception e) {
+			log.error(e);
+		}
+		return false;
+	}
+
 	public void stop() {
 		try {
 			if (deployerObj != null) {
@@ -95,16 +100,23 @@ public class VertxServerLauncher extends VertxServerProfile {
 		}
 	}
 
+	public URL[] getUrls() {
+		return urls;
+	}
+
+	public Log getLog() {
+		return log;
+	}
+
 	private void initDeployer() throws ClassNotFoundException, NoSuchMethodException, InstantiationException,
 			IllegalAccessException {
 
 		if (deployerObj == null) {
-			deployer = currentThread().getContextClassLoader().loadClass(
-					"org.vertx.maven.plugin.server.profile.VertxDeployer");
+			deployer = currentThread().getContextClassLoader().loadClass("org.vertx.maven.plugin.server.VertxDeployer");
 
 			undeployAll = deployer.getMethod("undeployAll");
 			stopPM = deployer.getMethod("stop");
-
+			isDeployed = deployer.getMethod("isDeployed");
 			deployerObj = deployer.newInstance();
 		}
 	}
