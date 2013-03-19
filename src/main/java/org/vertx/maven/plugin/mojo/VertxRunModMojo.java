@@ -64,9 +64,9 @@ public class VertxRunModMojo extends BaseVertxMojo {
                             } else {
                                 System.out
                                         .println("Could not find the module.");
-                                System.out
-                                        .println("Press CTRL-C to exit and do `mvn package`");
-                                // latch.countDown();
+                                // System.out
+                                // .println("Press CTRL-C to exit and do `mvn package`");
+                                latch.countDown();
                             }
                         }
                     });
