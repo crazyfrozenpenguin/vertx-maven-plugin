@@ -1,18 +1,19 @@
 package org.vertx.maven.plugin.mojo;
 
-import static java.lang.Thread.currentThread;
 import static org.apache.maven.plugins.annotations.ResolutionScope.COMPILE_PLUS_RUNTIME;
 
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.vertx.java.core.Handler;
+import org.vertx.java.platform.PlatformLocator;
+import org.vertx.java.platform.PlatformManager;
 
 /*
  * Copyright 2001-2005 The Apache Software Foundation.
+
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,31 +48,31 @@ public class VertxRunModMojo extends BaseVertxMojo {
 
     @Override
     public void execute() throws MojoExecutionException {
-        this.daemon = false;
+
         args = getArgs();
         args.add(0, VERTX_RUNMOD_COMMAND);
 
-        ClassLoader classLoader = new URLClassLoader(getClassPathUrls(args));
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        Thread.currentThread().setContextClassLoader(classLoader);
-
         try {
-            Class<?> deployer = currentThread().getContextClassLoader()
-                    .loadClass("org.vertx.maven.plugin.mojo.VertxManager");
-            Object deployerObj = deployer.newInstance();
-            Method deploy;
-
-            deploy = deployer.getMethod("deploy", new Class[] { List.class,
-                    URL[].class });
-            deploy.invoke(deployerObj, new Object[] { args,
-                    getClassPathUrls(args) });
-
-            Thread.currentThread().setContextClassLoader(cl);
-
+            PlatformManager pm = PlatformLocator.factory
+                    .createPlatformManager();
+            final CountDownLatch latch = new CountDownLatch(1);
+            pm.deployModule(args.get(1), getConf(args), getInstances(args),
+                    new Handler<String>() {
+                        public void handle(String deploymentID) {
+                            if (deploymentID != null) {
+                                System.out.println("CTRL-C to stop server");
+                            } else {
+                                System.out
+                                        .println("Could not find the module.");
+                                System.out
+                                        .println("Press CTRL-C to exit and do `mvn package`");
+                                // latch.countDown();
+                            }
+                        }
+                    });
+            latch.await(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             throw new MojoExecutionException(e.getMessage());
         }
-
     }
-
 }
