@@ -63,7 +63,7 @@ public class VertxRunModMojo extends BaseVertxMojo {
                                 System.out.println("CTRL-C to stop server");
                             } else {
                                 System.out
-                                        .println("Could not find the module.");
+                                        .println("Could not find the module. Did you forget to do mvn package?");
                                 // System.out
                                 // .println("Press CTRL-C to exit and do `mvn package`");
                                 latch.countDown();
